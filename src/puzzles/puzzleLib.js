@@ -1,7 +1,7 @@
 import { Puzzle } from './Puzzle';
 
 
-export const PuzzleList = Object.freeze({
+export const PUZZLE_LIST = Object.freeze({
     'InitPine': new Puzzle('InitPine', [
         {
             'TL0': {px: -7.0, py: -1.0, rz: 0},
@@ -150,5 +150,43 @@ export const PuzzleList = Object.freeze({
             'SQ': {px: -3.1, py: 0.3, rz: 90},
             'PL': {px: -1.5, py: 2.5, rz: -90, ry: 0},
         }
-    ], { px: -1, py: 3, rz: 0 })
+    ], { px: -1, py: 3, rz: 0 }),
+
+    'AbstractZero': new Puzzle('Abstract Zero', [
+        {
+            'TL0': {px: -2.5, py: 0.3, rz: 180},
+            'TL1': {px: -1.5, py: 1.3, rz: 0},
+            'TM': {px: -2.5, py: 2.3, rz: 180},
+            'TS0': {px: -1.5, py: -1.7, rz: 0},
+            'TS1': {px: 0.5, py: 0.3, rz: 90},
+            'SQ': {px: -0.5, py: -0.7, rz: 45},
+            'PL': {px: -4.0, py: 1.8, rz: 90, ry: 180},
+        }
+    ], {px: -0.5, py: -1.7, rz: 0}),
+
+    'InclinedChair': new Puzzle('Inclined Chair', [
+        {
+            'TL0': {px: 0.0, py: 0.0, rz: 0},
+            'TL1': {px: -2.0, py: 0.0, rz: 180},
+            'TM': {px: -4.0, py: 2.0, rz: -90},
+            'TS0': {px: -5.0, py: 2.0, rz: 90},
+            'TS1': {px: 1.0, py: 0.0, rz: 180},
+            'SQ': {px: -1.0, py: -2.0, rz: 135},
+            'PL': {px: -3.5, py: 0.5, rz: 0, ry: 180},
+        }
+    ], {px: -1, py: -3, rz: 0}),
 });
+
+
+// Problem sets for each experiment
+export const PUZZLE_SETS = {
+    TINY_TEST: ['Square'],
+    PILOT_STUDY_2025_SPRING: [
+        'Square',          // Gemo.  | symmetric | 
+        'Fox',             // animal | assym.    | fixed rotation
+        'Heart',           // object | symmetric | fixed rotation
+        'InclinedChair',   // object | symmetric | 
+        'AbstractZero',    // symbol | symmetric | fixed rotation
+        'NinjaStar',       // object | symmetric | spining*
+    ],
+};

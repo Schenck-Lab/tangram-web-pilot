@@ -1,11 +1,11 @@
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { TANGRAM_SHAPES } from '../graphics/tangramShapes';
-import { PuzzleList } from '../puzzles/puzzleLib';
+import { PUZZLE_LIST } from '../puzzles/puzzleLib';
 import { useGameContext } from '../contexts/GameContext';
 import { BASIC_MAT } from '../graphics/materials';
 import VisCoord from './VisCoord';
-
+import { STATUS, TASK_LIST } from '../constants/gameStatus';
 
 // Puzzle Effect
 const PUZZLE_EFFECTS = Object.freeze({
@@ -24,7 +24,7 @@ const PUZZLE_EFFECTS = Object.freeze({
         px: -2,
         py: 0,
         update: (ref, state, delta) => {
-            ref.current.rotation.z += Math.PI * 0.002;
+            ref.current.rotation.z += Math.PI * delta * 0.2;
         },
     },
 
@@ -33,6 +33,14 @@ const PUZZLE_EFFECTS = Object.freeze({
         py: 0,
         update: (ref, state, delta) => {
             ref.current.rotation.z = Math.PI * -0.25;
+        },
+    },
+
+    'AbstractZero': {
+        px: -2,
+        py: 0,
+        update: (ref, state, delta) => {
+            ref.current.rotation.z = Math.PI * 0.25;
         },
     }
 });
@@ -45,7 +53,7 @@ function degToRad(deg) {
 function PtnPiece({sid, pieceKey, matSet}) {
     const { ptnRef } = useGameContext();
     ptnRef.current[sid][pieceKey] = useRef();
-    const ptnMesh = TANGRAM_SHAPES[pieceKey](matSet.BLK);
+    const ptnMesh = TANGRAM_SHAPES[pieceKey](matSet.BLK, 0);
 
     return (
         <group ref={ptnRef.current[sid][pieceKey]} position={[0,0,-1]}>
@@ -54,10 +62,11 @@ function PtnPiece({sid, pieceKey, matSet}) {
     );
 }
 
-function PatternBoard({ puzzleKey }) {
+function PatternBoard({ state }) {
+    const puzzleKey = TASK_LIST[state.taskId];
     const outerRef = useRef();
     const innerRef = useRef();
-    const pz = PuzzleList[puzzleKey];
+    const pz = PUZZLE_LIST[puzzleKey];
     const ptnKeys = ['TL0', 'TL1', 'TM', 'TS0', 'TS1', 'SQ', 'PL'];
     const { ptnRef } = useGameContext();
     const matSet = BASIC_MAT;
@@ -80,7 +89,6 @@ function PatternBoard({ puzzleKey }) {
             });
         }
 
-        
         if (puzzleKey in PUZZLE_EFFECTS) {
             const x = PUZZLE_EFFECTS[puzzleKey].px;
             const y = PUZZLE_EFFECTS[puzzleKey].py;
@@ -113,7 +121,7 @@ function PatternBoard({ puzzleKey }) {
                         ptnKeys.map((k, i) => (
                             <PtnPiece key={i} sid={sid} pieceKey={k} matSet={matSet} />
                     )))}
-                    <VisCoord puzzleKey={puzzleKey} grid={false} />
+                    <VisCoord state={state} grid={false} />
                 </group>
             </group>
         </group>

@@ -1,8 +1,11 @@
 import { useDrag } from '@use-gesture/react';
+import { useGameContext } from '../contexts/GameContext';
 import * as THREE from 'three';
 
 
-export function useBind(objRef, pieceKey, spin, camera, size, flipRef) {
+export function useBind(objRef, pieceKey, spin, camera, size, flipRef, mask) {
+    const { globalHover } = useGameContext();
+
     let initPan = undefined;  // help for panning piece
     let initRot = undefined;  // help for rotating piece
     let initAngle = undefined;
@@ -16,7 +19,13 @@ export function useBind(objRef, pieceKey, spin, camera, size, flipRef) {
         return worldPosition;
     };
 
-    return useDrag(({ down, xy: [x, y], initial: [ix, iy] }) => {
+    return useDrag(({ down, xy: [x, y], initial: [ix, iy]}) => {
+
+        const isActive = globalHover.current > 0 && globalHover.current === mask;
+        if (!isActive) {
+            return;
+        }
+        
         // Update cursor style
         document.body.style.cursor = down ? 'grabbing' : 'grab';
 

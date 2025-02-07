@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { useBind} from '../utils/useBind';
+import { useBind } from '../utils/useBind';
 import { useGameContext } from '../contexts/GameContext';
 import { TANGRAM_SHAPES, THICKNESS, unit } from '../graphics/tangramShapes';
 import { pi, cyl_mesh } from '../graphics/meshes';
@@ -9,23 +9,27 @@ import { pi, cyl_mesh } from '../graphics/meshes';
 function Piece({ sid, pid, pieceKey, matSet }) {
     const { spin, globalHover, pieceRef, flipRef } = useGameContext();
     pieceRef.current[sid][pieceKey] = useRef();
-    
     const defRef = useRef();
     const hovRef = useRef();
     const isHover = useRef(false);
 
     const { camera, size } = useThree();
-    const bind = useBind(pieceRef.current[sid][pieceKey], 
-        pieceKey, spin, camera, size, flipRef
-    );
     const mask = 1 << (sid * 7 + pid);
+
+    const bind = useBind(pieceRef.current[sid][pieceKey], 
+        pieceKey, spin, camera, size, flipRef, mask
+    );
+
     const cylGeo = [unit / 20, unit / 20, THICKNESS * 2, 12, 1];
 
-    const rotAxis = cyl_mesh(matSet.AX, cylGeo, [0,0,0], [pi(0.5),0,0]);
-    const hovMesh = TANGRAM_SHAPES[pieceKey](matSet.HOV);
-    const defMesh = TANGRAM_SHAPES[pieceKey](matSet[pieceKey]);
+    const rotAxis = cyl_mesh(matSet.AX, cylGeo, [0,0,1], [pi(0.5),0,0]);
+    const hovMesh = TANGRAM_SHAPES[pieceKey](matSet.HOV, 1);
+    const defMesh = TANGRAM_SHAPES[pieceKey](matSet[pieceKey], 0);
 
     useFrame(() => {
+        if (globalHover.current > 0 && globalHover.current !== mask) {
+            return;
+        }
         defRef.current.visible = !(isHover.current);
         hovRef.current.visible = isHover.current;
         

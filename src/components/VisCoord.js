@@ -2,15 +2,16 @@ import React from 'react';
 import { Grid } from '@react-three/drei';
 import { pi, cyl_mesh, box_mesh } from '../graphics/meshes';
 import { BASIC_MAT } from '../graphics/materials';
-import { PuzzleList } from '../puzzles/puzzleLib';
+import { PUZZLE_LIST } from '../puzzles/puzzleLib';
+import { TASK_LIST } from '../constants/gameStatus';
 
-
-function VisCoord({puzzleKey, grid=true}) {
+function VisCoord({state, grid=true}) {
+    const puzzleKey = TASK_LIST[state.taskId];
     if (!puzzleKey) return null;
 
     const cylGeo  = [0.1, 0.1, 1, 24, 1];
     const meshRot = [pi(0.5), 0, 0];
-    const {px, py, rz} = PuzzleList[puzzleKey]?.visibleCoordinate ?? {
+    const {px, py, rz} = PUZZLE_LIST[puzzleKey]?.visibleCoordinate ?? {
         px: 0, py: 0, rz: 0
     };
 

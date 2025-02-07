@@ -4,9 +4,9 @@ import PlayBoard from './PlayBoard';
 // eslint-disable-next-line
 import { OrbitControls } from '@react-three/drei';
 import { useGameContext } from '../contexts/GameContext';
-import { PuzzleList } from '../puzzles/puzzleLib';
+import { PUZZLE_LIST } from '../puzzles/puzzleLib';
 import PatternBoard from './PatternBoard';
-import Overlay from './Overlay';
+import StatusUI from './StatusUI';
 import { Dropdown, Button, Space } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
 
@@ -19,7 +19,7 @@ function PuzzleDropdown({selectPuzzleKey}) {
     ];
 
     // Create the list of menu items with keys
-    const items = Object.keys(PuzzleList)
+    const items = Object.keys(PUZZLE_LIST)
         .filter((_, i) => i > 0)
         .map((key, i) => ({ 
             label: `${key}${info[i]}`, 
@@ -91,7 +91,7 @@ function Game() {
                 <PlayBoard puzzleKey={puzzleKey} handleProgress={setProgress} />
                 <PatternBoard puzzleKey={puzzleKey} />
             </Canvas>
-            <Overlay puzzleKey={puzzleKey} totalTime={time} progress={progress} />
+            <StatusUI puzzleKey={puzzleKey} totalTime={time} progress={progress} />
             <PuzzleDropdown selectPuzzleKey={setPuzzleKey} />
         </div>
     );
