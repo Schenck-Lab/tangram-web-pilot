@@ -1,5 +1,5 @@
 import React from 'react';
-import { STATUS } from '../../constants/gameStatus';
+import { STATUS } from '../../constants/gameConfig';
 import { Button } from 'antd';
 
 const GoNext = ({ onNext, result }) => {

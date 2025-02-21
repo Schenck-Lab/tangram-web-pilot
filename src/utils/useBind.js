@@ -3,13 +3,13 @@ import { useGameContext } from '../contexts/GameContext';
 import * as THREE from 'three';
 
 
-export function useBind(objRef, pieceKey, spin, camera, size, flipRef, mask) {
-    const { globalHover } = useGameContext();
-
+export function useBind(tanRef, pieceKey, mask, rotationEnabled, camera, size) {
+    const { hoverMask } = useGameContext();
+    
     let initPan = undefined;  // help for panning piece
     let initRot = undefined;  // help for rotating piece
     let initAngle = undefined;
-
+    
     // Convert screen coordinates to scene/world coordinates
     const screenToScene = (screenX, screenY) => {
         const ndcX = +((screenX / size.width ) * 2 - 1);
@@ -20,60 +20,45 @@ export function useBind(objRef, pieceKey, spin, camera, size, flipRef, mask) {
     };
 
     return useDrag(({ down, xy: [x, y], initial: [ix, iy]}) => {
-
-        const isActive = globalHover.current > 0 && globalHover.current === mask;
-        if (!isActive) {
+        const isActive = (hoverMask.current > 0) && (hoverMask.current === mask);
+        if (!isActive || !down) {
+            initRot = undefined;
+            initPan = undefined;
             return;
         }
-        
         // Update cursor style
         document.body.style.cursor = down ? 'grabbing' : 'grab';
 
-        const rotaBit = flipRef.current[0] & 1;
-        const sign = (pieceKey === 'PL' && rotaBit) ? -1 : 1;
+        const ry = tanRef.current.rotation.y;
+        const sign = (pieceKey === 'PL' && ry === Math.PI) ? -1 : 1;
         
         // Handle translation
-        if (!spin.current) {
+        if (!rotationEnabled.current) {
+            // initPan is undefined
             if (!initPan) {
                 const initCursor = screenToScene(ix, iy);
-                initPan = initCursor.clone().sub(objRef.current.position);
-                initAngle = objRef.current.rotation.z * sign;
+                initPan = initCursor.clone().sub(tanRef.current.position);
+                //initAngle = tanRef.current.rotation.z * sign;
             }
             const currCursor = screenToScene(x, y);
             const targetPos = currCursor.clone().sub(initPan);
-            objRef.current.position.set(...roundDist(targetPos));
-
-            if (!down) {
-                initPan = undefined;
-                initRot = undefined;
-            }
+            tanRef.current.position.set(...roundDist(targetPos));
             return;
         }
 
         // Handle rotation
-        if (down && !initRot) {
+        if (!initRot) {
             const currCursor = screenToScene(x, y);
-            initRot = currCursor.clone().sub(objRef.current.position);
-            initAngle = objRef.current.rotation.z * sign;
+            initRot = currCursor.clone().sub(tanRef.current.position);
+            initAngle = tanRef.current.rotation.z * sign;
         }
+        const currCursor = screenToScene(x, y);
+        const diffVec = currCursor.clone().sub(tanRef.current.position);
 
-        if (down && initRot) {
-            const currCursor = screenToScene(x, y);
-            const diffVec = currCursor.clone().sub(objRef.current.position);
-
-            const B = Math.atan2(diffVec.y, diffVec.x);
-            const A = Math.atan2(initRot.y, initRot.x);
-            const result = roundToRad(initAngle + (B - A)) * sign;
-            objRef.current.rotation.z = result;
-
-            // Update panning helper while object spinning
-            initPan = diffVec.clone();
-        }
-
-        if (!down) {
-            initRot = undefined;
-            initPan = undefined;
-        }
+        const B = Math.atan2(diffVec.y, diffVec.x);
+        const A = Math.atan2(initRot.y, initRot.x);
+        const result = roundToRad(initAngle + (B - A)) * sign;
+        tanRef.current.rotation.z = result;
     });
 }
 
@@ -97,9 +82,4 @@ function roundDist(vec) {
         roundTo(vec.y, UNIT),
         roundTo(vec.z, UNIT)
     );
-}
-
-// eslint-disable-next-line
-function deg(a) {
-    return (a * 180 / Math.PI).toFixed(2);
 }

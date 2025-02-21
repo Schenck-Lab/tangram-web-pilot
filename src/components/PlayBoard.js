@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Grid } from '@react-three/drei';
-import { BASIC_MAT } from '../graphics/materials';
 import { useGameContext } from '../contexts/GameContext';
 import { useFrame } from '@react-three/fiber';
+import { BASIC_MAT } from '../graphics/materials';
 import { pi, cyl_mesh, box_mesh } from '../graphics/meshes';
-import TangramSet from './TangramSet';
+import Tans from './Tans';
 import VisCoord from './VisCoord';
 import { PieceState } from '../puzzles/PieceState';
 import { Puzzle } from '../puzzles/Puzzle';
 import { PUZZLE_LIST } from '../puzzles/puzzleLib';
-import { STATUS, TASK_LIST } from '../constants/gameStatus';
-import { toStdDeg, getTimeStampString } from '../utils/utils'
+import { STATUS, TASK_LIST, MASK_KEY_MAP, CSV_HEADER, COL_NAME_INDICE } from '../constants/gameConfig';
+import { toStdDeg, getTimeStampString } from '../utils/utils';
 
 
 function MainCoordinateIndicator() {
@@ -31,11 +31,9 @@ function MainCoordinateIndicator() {
     }
 
     useEffect(() => {
-        // Add event listeners for keydown and keyup
         window.addEventListener('keydown', handleKeyDown);
         window.addEventListener('keyup', handleKeyUp);
         
-        // Clean up by removing event listeners on unmount
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('keyup', handleKeyUp);
@@ -59,85 +57,49 @@ function MainCoordinateIndicator() {
 }
 
 function PlayBoard({state, handleProgress}) {
-    const { 
-        globalHover, pieceRef, lastEntry, addGameData
-    } = useGameContext();
+    const { hoverMask, playerTans, lastEntry, addGameData } = useGameContext();
 
     const puzzleKey = TASK_LIST[state.taskId];
     const coordinateRef = useRef();
-    const ps = [];
-    updateCurrentPieceState(ps);
+    let ps = updateCurrentPieceState();
     const currPz = new Puzzle('running', ps);
     
     function updateCurrentPieceState() {
-        ps.length = 0;
-        for (let i = 0; i < pieceRef.current.length; ++i) {
-            const currRef = pieceRef.current[i];
-            if (Object.keys(currRef).length === 0) break;
-
-            const temp = {};
-            Object.keys(currRef).forEach(key => {
-                const {x: px, y: py} = currRef[key].current.position;
-                const {y: ry, z: rz} = currRef[key].current.rotation;
-
-                temp[key] = { 
-                    px: Number(px.toFixed(2)), 
-                    py: Number(py.toFixed(2)),
-                    rz: toStdDeg(rz) 
-                };
-                if (key === 'PL') {
-                    temp[key]['ry'] = toStdDeg(ry);
-                }
-            });
-            ps[i] = new PieceState(temp);
-        }
+        const temp = {};
+        Object.entries(playerTans.current).forEach(([key, piece]) => {
+            const {x: px, y: py} = piece.current.position;
+            const {y: ry, z: rz} = piece.current.rotation;
+            temp[key] = { 
+                px: Number(px.toFixed(2)), 
+                py: Number(py.toFixed(2)),
+                rz: toStdDeg(rz) 
+            };
+            if (key === 'PL') {
+                temp[key]['ry'] = toStdDeg(ry);
+            }
+        });
+        return new PieceState(temp);
     }
 
-    const computeProgress = useCallback(() => {
+    const computeProgress = () => {
         if (!puzzleKey) return [0, 1];
 
-        updateCurrentPieceState();
+        ps = updateCurrentPieceState();
         currPz.update(ps);
         const C = currPz.atomStates;
         const T = PUZZLE_LIST[puzzleKey].atomStates;
         const R = C.intersection(T);
         return [R.size, T.size];
-
-    // eslint-disable-next-line
-    }, [puzzleKey]); 
+    }
     
     const handleKeyDown = (event) => {
         if (event.key === 'l') {
-            updateCurrentPieceState();
-            console.log(ps[0].toString());
+            ps = updateCurrentPieceState();
+            console.log(ps.toString());
         }
     };
 
-    function findTargetPiece(oldEntry, newEntry) {
-        if (oldEntry.length !== newEntry.length) {
-            throw new Error('Buffers size mismatch.');
-        }
-        if (oldEntry.length !== 27 || newEntry.length !== 27) {
-            throw new Error(`Invalid Buffer size: 
-                ${oldEntry.length}, ${newEntry.length}.`);
-        }
-        for (let i = 4; i < newEntry.length; ++i) {
-            if (oldEntry[i] === newEntry[i]) {
-                continue;
-            }
-            if (i === 26) {
-                throw new Error('Progress Score error.');
-            }
-            if (i === 25) {
-                return 'PL';
-            }
-            const pieceIndex = Math.floor((i - 4) / 3);
-            return ['TL0', 'TL1', 'TM', 'TS0', 'TS1', 'SQ', 'PL'][pieceIndex];
-        }
-        return null;
-    }
-
-    function handleMouseUp(event) {
+    const handleMouseUp = (event) => {
         if (!puzzleKey) {
             handleProgress(0);
             return;
@@ -147,36 +109,47 @@ function PlayBoard({state, handleProgress}) {
         handleProgress(progressScore);
         
         // Organize new entry of current data after some mouse up event
-        const pieceSet = pieceRef.current[0];
+        const tans = playerTans.current;
         const transformData = {};
-        Object.keys(pieceSet).forEach(name => {
-            const piece = pieceSet[name].current;
+        Object.keys(tans).forEach(name => {
+            const piece = tans[name].current;
             transformData[`${name}_X`] = piece.position.x.toFixed(1);
             transformData[`${name}_Y`] = piece.position.y.toFixed(1);
-            transformData[`${name}_R`] = toStdDeg(piece.rotation.z);
+            transformData[`${name}_R`] = toStdDeg(piece.rotation.z).toFixed(0);
         });
-        const PL_F = toStdDeg(pieceSet.PL.current.rotation.y);
+        const PL_F = toStdDeg(tans.PL.current.rotation.y).toFixed(0);
+
+        const stepIdx = COL_NAME_INDICE[CSV_HEADER.STEP];
+        const maxProIdx = COL_NAME_INDICE[CSV_HEADER.MAX_PROGRESS];
+        const newStep = lastEntry.current[stepIdx] + 1;
+
+        const currProgressStr = progressScore.toFixed(2);
+        const lastMaxProgressStr = lastEntry.current[maxProIdx];
+        const currMaxProgressStr = Math.max(
+            Number(currProgressStr), Number(lastMaxProgressStr)).toFixed(2);
 
         const currEntry = [
             puzzleKey, 
             getTimeStampString(),
-            lastEntry.current[2] + 1,
-            'finding',
+            newStep,
+            'none',
             ...Object.values(transformData),
             PL_F,
-            progressScore.toFixed(2)
+            currProgressStr,
+            currMaxProgressStr,
         ];
 
         // add game data to csvBuffer
-        const targetPiece = findTargetPiece(currEntry, lastEntry.current)
-        if (targetPiece !== null && state.status === STATUS.SOLVING) {
-            currEntry[3] = targetPiece;
+        const focusIdx = COL_NAME_INDICE[CSV_HEADER.FOCUS_PIECE];
+        const focusPiece = MASK_KEY_MAP[hoverMask.current];
+        if (focusPiece && state.status === STATUS.SOLVING) {
+            currEntry[focusIdx] = focusPiece;
             addGameData(currEntry);
             lastEntry.current = currEntry;
         }
     }
 
-    function handleDoubleClick() {
+    const handleDoubleClick = () => {
         // after double click, in case (...rarely) the player double-click
         // the PL which leads a final win, we do a computeProgress call
         // from the handleMouseUp function after 0.1 seconds
@@ -185,24 +158,30 @@ function PlayBoard({state, handleProgress}) {
         }, 100);
     }
 
+    const disableRightClick = (event) => {
+        event.preventDefault();
+    };
+
     useEffect(() => {
         // Add event listeners for keydown and keyup
         window.addEventListener('keydown', handleKeyDown);
         window.addEventListener('mouseup', handleMouseUp);
         window.addEventListener('dblclick', handleDoubleClick);
+        window.addEventListener('contextmenu', disableRightClick);
         
         // Clean up by removing event listeners on unmount
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('mouseup', handleMouseUp);
             window.removeEventListener('dblclick', handleDoubleClick);
+            window.removeEventListener("contextmenu", disableRightClick);
         };
     // eslint-disable-next-line
     }, [state]);
 
 
     function updateCursorStyle() {
-        if (globalHover.current === 0) {
+        if (hoverMask.current === 0) {
             document.body.style.cursor = 'default';
         }
         else if (document.body.style.cursor === 'default') {
@@ -210,34 +189,13 @@ function PlayBoard({state, handleProgress}) {
         }
     }
 
-    // useEffect(() => {
-    //     const init = PUZZLE_LIST.InitPine;
-    //     //const init = PuzzleList[puzzleKey];
-    //     for (let i = 0; i < pieceRef.current.length; ++i) {
-    //         const tgt = init.pieceStates[i];
-    //         const ref = pieceRef.current[i];
-
-    //         Object.keys(ref).forEach(k => {
-    //             const { px, py, rz } = tgt[k];
-    //             ref[k].current.position.x = px;
-    //             ref[k].current.position.y = py;
-    //             ref[k].current.rotation.z = degToRad(rz);
-    //             if (k === 'PL')
-    //                 ref[k].current.rotation.y = degToRad(tgt[k].ry);
-    //         });
-    //     }
-    //     flipRef.current[0] = 0;
-    //     flipRef.current[1] = 0;
-    // // eslint-disable-next-line
-    // }, [puzzleKey]);
-
     useFrame(() => {
         updateCursorStyle();
     });
 
     return (
         <group ref={coordinateRef} position={[0,0,0]} >
-            <TangramSet sid={0} matSet={BASIC_MAT} />
+            <Tans />
             <MainCoordinateIndicator />
             <VisCoord state={state} />
         </group>

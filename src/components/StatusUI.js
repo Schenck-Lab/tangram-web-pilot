@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Progress } from 'antd';
 import { useTimer } from 'react-timer-hook';
-import { STATUS, TASK_LIST } from '../constants/gameStatus';
+import { STATUS, TASK_LIST } from '../constants/gameConfig';
 import { PUZZLE_LIST } from '../puzzles/puzzleLib';
 
 
@@ -9,8 +9,8 @@ function span(className, content) {
     return <span className={className}>{content}</span>;
 }
 
-function TopBar({state}) {
-    const [title, setTitle] = useState("Tangram Puzzles");
+function TopBar({ state }) {
+    const [title, setTitle] = useState('Tangram Puzzles');
     
     useEffect(() => {
         const puzzleKey = TASK_LIST[state.taskId] ?? null;
@@ -46,8 +46,7 @@ function GameGuide() {
 }
 
 
-function ProgressBar({state, setState, progress}) {
-
+function ProgressBar({ state, setState, progress }) {
     const puzzleKey = TASK_LIST[state.taskId];
     const { seconds, minutes, pause } = useTimer({ 
         expiryTimestamp: state.deadline, 
@@ -62,18 +61,10 @@ function ProgressBar({state, setState, progress}) {
         autoStart: true,
     });
 
-    // [Note: This code for Elapsed Time is deprecated]
-    // const timeUsed = DURATION_8_MIN - (60 * minutes + seconds);
-    // const min = Math.floor(timeUsed / 60);
-    // const sec = timeUsed % 60;
-    // const minStr = min.toString().padStart(2, '0');
-    // const secStr = sec.toString().padStart(2, '0');
-    // const timeStr = <span className='time-number'>{minStr} : {secStr}</span>;
-
     // Remaining time
-    const minStr = minutes.toString().padStart(2, '0');
-    const secStr = seconds.toString().padStart(2, '0');
-    const timeStr = <span className='time-number'>{minStr} : {secStr}</span>;
+    const mm = minutes.toString().padStart(2, '0');
+    const ss = seconds.toString().padStart(2, '0');
+    const timeStr = <span className='time-number'>{mm} : {ss}</span>;
 
     useEffect(() => {
         if (progress >= 100) {
@@ -100,17 +91,11 @@ function ProgressBar({state, setState, progress}) {
 }
 
 function StatusUI({state, setState, progress}) {
-    return (
-        <>
-            <TopBar state={state} />
-            {state.deadline > 0 ? <ProgressBar 
-                state={state} 
-                setState={setState}
-                progress={progress}
-            /> : null}
-            <GameGuide />
-        </>
-    );
+    return (<>
+        <TopBar state={state} />
+        { state.deadline > 0 && <ProgressBar state={state} setState={setState} progress={progress}/> }
+        <GameGuide />
+    </>);
 }
 
 export default StatusUI;

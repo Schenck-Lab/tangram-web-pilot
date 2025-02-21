@@ -3,7 +3,7 @@ import { Grid } from '@react-three/drei';
 import { pi, cyl_mesh, box_mesh } from '../graphics/meshes';
 import { BASIC_MAT } from '../graphics/materials';
 import { PUZZLE_LIST } from '../puzzles/puzzleLib';
-import { TASK_LIST } from '../constants/gameStatus';
+import { TASK_LIST } from '../constants/gameConfig';
 
 function VisCoord({state, grid=true}) {
     const puzzleKey = TASK_LIST[state.taskId];
