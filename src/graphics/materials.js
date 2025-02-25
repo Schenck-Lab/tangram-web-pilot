@@ -1,6 +1,6 @@
 import React from 'react';
 import { DoubleSide } from "three";
-export { PLANT_MAT, BASIC_MAT, POXI_MAT, makePalette };
+export { PLANT_MAT, BASIC_MAT, BASIC_2_MAT, POXI_MAT, makePalette };
 
 // https://www.istockphoto.com/vector/
 // tangram-puzzle-game-schemas-with-different-objects-gm1338542708-419094570
@@ -23,6 +23,20 @@ const BASIC_MAT = Object.freeze({
     TS1: makeBasic(0x505e87),
     SQ:  makeBasic(0xA68968),
     PL:  makeBasic(0x96BFAA),
+    HOV: makeBasic(0xffffff),
+    BLK: makeBasic(0x000000),
+    AX:  makeBasic(0x999999),
+    ORI: makeBasic(0xff6666),
+});
+
+const BASIC_2_MAT = Object.freeze({
+    TL0: makeBasic(0x634063),
+    TL1: makeBasic(0x324081),
+    TM:  makeBasic(0x76D4Dc),
+    TS0: makeBasic(0xFDFBFE),
+    TS1: makeBasic(0xD1AEBA),
+    SQ:  makeBasic(0xA17470),
+    PL:  makeBasic(0xc9b8a3),
     HOV: makeBasic(0xffffff),
     BLK: makeBasic(0x000000),
     AX:  makeBasic(0x999999),

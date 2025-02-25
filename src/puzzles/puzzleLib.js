@@ -199,7 +199,7 @@ export const PUZZLE_LIST = Object.freeze({
 
 // Problem sets for each experiment
 export const PUZZLE_SETS = {
-    TINY_TEST: ['Square'],
+    TINY_TEST: ['Square', 'InclinedChair'],
     PILOT_STUDY_2025_SPRING: [
         'Square',          // Gemo.  | symmetric | 
         'Fox',             // animal | assym.    | fixed rotation

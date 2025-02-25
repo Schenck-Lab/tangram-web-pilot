@@ -9,7 +9,8 @@ import VisCoord from './VisCoord';
 import { PieceState } from '../puzzles/PieceState';
 import { Puzzle } from '../puzzles/Puzzle';
 import { PUZZLE_LIST } from '../puzzles/puzzleLib';
-import { STATUS, TASK_LIST, MASK_KEY_MAP, CSV_HEADER, COL_NAME_INDICE } from '../constants/gameConfig';
+import { STATUS, TASK_LIST, MASK_KEY_MAP, CSV_HEADER, 
+    COL_NAME_INDICE, EVENT_CTRL } from '../constants/gameConfig';
 import { toStdDeg, getTimeStampString } from '../utils/utils';
 
 
@@ -19,13 +20,13 @@ function MainCoordinateIndicator() {
     const [visFlag, setVisFlag] = useState(false);
 
     function handleKeyDown(event) {
-        if (event.key === 'g') {
+        if (EVENT_CTRL.displayMainCoordinates && event.key === 'g') {
             setVisFlag(true);
         }
     }
 
     function handleKeyUp(event) {
-        if (event.key === 'g') {
+        if (EVENT_CTRL.displayMainCoordinates && event.key === 'g') {
             setVisFlag(false);
         }
     }
@@ -93,7 +94,7 @@ function PlayBoard({state, handleProgress}) {
     }
     
     const handleKeyDown = (event) => {
-        if (event.key === 'l') {
+        if (EVENT_CTRL.logPieceStateToConsole && event.key === 'l') {
             ps = updateCurrentPieceState();
             console.log(ps.toString());
         }

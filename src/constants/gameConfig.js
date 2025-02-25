@@ -22,6 +22,13 @@ export const KEY_MASK_MAP = Object.freeze(
 );
 
 
+/** Flags to control debug/admin button functionalities :::::::::::::::::::: */
+export const EVENT_CTRL = Object.freeze({
+    logPieceStateToConsole: false,
+    displayMainCoordinates: false,
+});
+
+
 /** Experiment and Data Collection ::::::::::::::::::::::::::::::::::::::::: */
 export const TASK_LIST = PUZZLE_SETS.PILOT_STUDY_2025_SPRING;
 export const DURATION_8_MIN = 480;  // 8 mins is 480 secs

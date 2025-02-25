@@ -72,7 +72,7 @@ function Piece({ pieceKey }) {
 function Tans() {
     return (
         <group>
-        {TAN_KEYS.map((k, i) => <Piece key={i} pieceKey={k} />)}
+            { TAN_KEYS.map((k, i) => <Piece key={i} pieceKey={k} />) }
         </group>
     );
 }

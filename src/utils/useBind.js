@@ -38,7 +38,6 @@ export function useBind(tanRef, pieceKey, mask, rotationEnabled, camera, size) {
             if (!initPan) {
                 const initCursor = screenToScene(ix, iy);
                 initPan = initCursor.clone().sub(tanRef.current.position);
-                //initAngle = tanRef.current.rotation.z * sign;
             }
             const currCursor = screenToScene(x, y);
             const targetPos = currCursor.clone().sub(initPan);

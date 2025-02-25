@@ -56,22 +56,37 @@ function Login({ onEnterGame }) {
             });
     };
 
+    const containerStyle = {
+        display: 'flex',
+        justifyContent: 'center',  // Center hori
+        alignItems: 'center',      // Center vert
+        height: '100vh',           // Full viewport height
+    };
+    const boxStyle = {
+        width: 400,
+        textAlign: 'center',
+        padding: 30,
+        border: '1px solid #ddd',
+        borderRadius: 8,
+        backgroundColor: '#ffffff',  // Light green
+    };
+
     return (
-        <div style={{ width: 400, margin: '50px auto', textAlign: 'center', padding: 20, border: '1px solid #ddd', borderRadius: 8 }}>
+        <div style={containerStyle}><div style={boxStyle}>
             <Title level={2}>Login</Title>
             
-            <Space direction="vertical" size="large" style={{ width: '100%' }}>
+            <Space direction='vertical' size='large' style={{ width: '100%' }}>
                 <Input
-                    type="email"
-                    placeholder="Enter your registered email"
+                    type='email'
+                    placeholder='Enter your registered email'
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={loading || validated}
-                    size="large"
+                    size='large'
                 />
 
                 <Button 
-                    type="primary" 
+                    type='primary' 
                     onClick={handleLogin} 
                     loading={loading} 
                     disabled={!email.trim() || validated}
@@ -80,13 +95,13 @@ function Login({ onEnterGame }) {
                     Confirm
                 </Button>
 
-                {error && <Alert message={error} type="error" showIcon />}
-                {successMessage && <Alert message={successMessage} type="success" showIcon />}
+                {error && <Alert message={error} type='error' showIcon />}
+                {successMessage && <Alert message={successMessage} type='success' showIcon />}
                 
                 {/* Move button below the message */}
                 {validated && taskCompleted === false && (
                     <Button 
-                        type="primary" 
+                        type='primary' 
                         onClick={onEnterGame} 
                         block
                     >
@@ -95,10 +110,10 @@ function Login({ onEnterGame }) {
                 )}
 
                 {validated && taskCompleted === true && (
-                    <Alert message="You have already completed the task." type="warning" showIcon />
+                    <Alert message='You have already completed the task.' type='warning' showIcon />
                 )}
             </Space>
-        </div>
+        </div></div>
     );
 }
 
