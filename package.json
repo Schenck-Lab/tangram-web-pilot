@@ -26,7 +26,7 @@
         "test": "react-scripts test",
         "eject": "react-scripts eject",
         "predeploy": "npm run build",
-        "deploy": "gh-pages -d build -r labrepo gh-pages"
+        "deploy": "gh-pages -d build -r https://github.com/Schenck-Lab/tangram-web-pilot.git"
     },
     "eslintConfig": {
         "extends": [
