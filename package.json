@@ -2,7 +2,7 @@
     "name": "web_tangram",
     "version": "0.1.0",
     "private": true,
-    "homepage": "https://schenck-lab.github.io/tangram-web-pilot",
+    "homepage": "https://Schenck-Lab.github.io/tangram-web-pilot",
     "dependencies": {
         "@react-three/cannon": "^6.6.0",
         "@react-three/csg": "^3.2.0",
