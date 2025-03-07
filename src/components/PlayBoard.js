@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Grid } from '@react-three/drei';
 import { useGameContext } from '../contexts/GameContext';
 import { useFrame, useThree } from '@react-three/fiber';
@@ -97,10 +97,10 @@ function PlayBoard({state, handleProgress}) {
         return worldPosition;
     };
 
-    const handleMouseMove = useCallback((event) => {
+    const handleMouseMove = (event) => {
         mouseXYRef.current.x = event.clientX;
         mouseXYRef.current.y = event.clientY;
-    }, []);
+    };
     
     const computeProgress = () => {
         if (!puzzleKey) return [0, 1];
@@ -164,18 +164,19 @@ function PlayBoard({state, handleProgress}) {
     }
     
     const handleKeyDown = (event) => {
+        // Admin-dev: display tangram piece for building new puzzle
         if (EVENT_CTRL.logPieceStateToConsole && event.key === 'l') {
             ps = updateCurrentPieceState();
             console.log(ps.toString());
         }
-
-        if (event.key === 'd') {
+        // Debug: display current 3D position of tangram puzzle
+        if (EVENT_CTRL.logPieceStateToConsole && event.key === 'd') {
             TAN_KEYS.forEach((key) => {
                 const pz = playerTans.current[key];
                 console.log(`${key}: `, pz.current.position);
             });
         }
-
+        // Flag control: rotationEnabled 
         if (event.key.toLowerCase() === 'r') {
             if (isDragging.current && focusMask.current > 0 && !rotationEnabled.current) {
                 
@@ -192,8 +193,7 @@ function PlayBoard({state, handleProgress}) {
                 if (initAngle.current === undefined) {
                     initRot.current = initCursor.clone().sub(tanRef.current.position);
                     initAngle.current = tanRef.current.rotation.z * sign;
-                }
-                
+                }   
             }
             rotationEnabled.current = true;
         }
@@ -317,7 +317,6 @@ function PlayBoard({state, handleProgress}) {
         updateCursorStyle();
 
         if (isDragging.current) {
-
             const pieceKey = MASK_KEY_MAP[focusMask.current];
             const tanRef = playerTans.current[pieceKey];
             const ry = tanRef.current.rotation.y;
@@ -335,13 +334,12 @@ function PlayBoard({state, handleProgress}) {
             
             // handle Rotation
             if (rotationEnabled.current) {
-                if (!initRot.current) {
+                if (!initRot.current || initAngle.current === undefined) {
                     return;
                 }
                 const diffVec = currCursor.clone().sub(tanRef.current.position);
                 const B = Math.atan2(diffVec.y, diffVec.x);
                 const A = Math.atan2(initRot.current.y, initRot.current.x);
-                
                 const result = roundToRad(initAngle.current + (B - A)) * sign;
                 tanRef.current.rotation.z = result;
             }

@@ -60,7 +60,7 @@ function ProgressBar({ state, setState, progress }) {
                 deadline: -1,
             }));
             totalTimeInSec.current += TIME_LIMIT.task;
-            console.log('Timer expired');
+            console.log(`Timer expired: ${puzzleKey}.`);
         },
         autoStart: true,
     });
