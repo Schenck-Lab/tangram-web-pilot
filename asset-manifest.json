@@ -1,0 +1,11 @@
+{
+  "files": {
+    "main.css": "/tangram-web-pilot/static/css/main.347e4f30.css",
+    "main.js": "/tangram-web-pilot/static/js/main.9bb9e00e.js",
+    "index.html": "/tangram-web-pilot/index.html"
+  },
+  "entrypoints": [
+    "static/css/main.347e4f30.css",
+    "static/js/main.9bb9e00e.js"
+  ]
+}
