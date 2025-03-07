@@ -1,6 +1,39 @@
 import React from 'react';
 import { DoubleSide } from "three";
-export { PLANT_MAT, BASIC_MAT, BASIC_2_MAT, POXI_MAT, makePalette };
+
+function makeStandard(color, flatflag=false, metalness=0.5, roughness=0.5) {
+    return <meshStandardMaterial color={color} 
+        metalness={metalness}
+        roughness={roughness}
+        side={DoubleSide}
+        flatShading={flatflag}
+    />;
+}
+
+function makeBasic(color) {
+    return <meshBasicMaterial color={color} />;
+}
+
+function makePalette(matSet, position) {
+    const size = 0.5;
+    const gap  = 0.2;
+    const keyList = Object.keys(matSet);
+    const n = keyList.length;
+    
+    const xStart = (n / 2) * size + Math.floor(n / 2) * gap;
+    const getX = (i) => -xStart + i * (size + gap);
+
+    return (
+        <group position={position}>
+            {keyList.map((key, i) => (
+                <mesh key={key} position={[getX(i), 0, 0]} castShadow>
+                    <boxGeometry args={[size, size, size]} />
+                    {matSet[key]}
+                </mesh>
+            ))}
+        </group>
+    );
+}
 
 // https://www.istockphoto.com/vector/
 // tangram-puzzle-game-schemas-with-different-objects-gm1338542708-419094570
@@ -55,37 +88,4 @@ const POXI_MAT = Object.freeze({
     ORANGE:     makeStandard(0xf54e38),
 });
 
-
-function makeStandard(color, flatflag=false, metalness=0.5, roughness=0.5) {
-    return <meshStandardMaterial color={color} 
-        metalness={metalness}
-        roughness={roughness}
-        side={DoubleSide}
-        flatShading={flatflag}
-    />;
-}
-
-function makeBasic(color) {
-    return <meshBasicMaterial color={color} />;
-}
-
-function makePalette(matSet, position) {
-    const size = 0.5;
-    const gap  = 0.2;
-    const keyList = Object.keys(matSet);
-    const n = keyList.length;
-    
-    const xStart = (n / 2) * size + Math.floor(n / 2) * gap;
-    const getX = (i) => -xStart + i * (size + gap);
-
-    return (
-        <group position={position}>
-            {keyList.map((key, i) => (
-                <mesh key={key} position={[getX(i), 0, 0]} castShadow>
-                    <boxGeometry args={[size, size, size]} />
-                    {matSet[key]}
-                </mesh>
-            ))}
-        </group>
-    );
-}
+export { PLANT_MAT, BASIC_MAT, BASIC_2_MAT, POXI_MAT, makePalette };
