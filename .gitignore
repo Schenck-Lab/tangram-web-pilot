@@ -24,3 +24,6 @@ yarn-error.log*
 
 # deprecated
 src/deprecate/
+
+# developer note
+developer-note.txt
