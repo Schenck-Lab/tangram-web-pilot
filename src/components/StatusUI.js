@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { TIME_LIMIT } from '../constants/gameConfig';
+import { useGameContext } from '../contexts/GameContext';
 import { Progress } from 'antd';
 import { useTimer } from 'react-timer-hook';
 import { STATUS, TASK_LIST } from '../constants/gameConfig';
@@ -47,6 +49,7 @@ function GameGuide() {
 
 
 function ProgressBar({ state, setState, progress }) {
+    const { totalTimeInSec } = useGameContext();
     const puzzleKey = TASK_LIST[state.taskId];
     const { seconds, minutes, pause } = useTimer({ 
         expiryTimestamp: state.deadline, 
@@ -56,7 +59,8 @@ function ProgressBar({ state, setState, progress }) {
                 status: STATUS.TIMEOUT,
                 deadline: -1,
             }));
-            console.log('Timer expired')
+            totalTimeInSec.current += TIME_LIMIT.task;
+            console.log('Timer expired');
         },
         autoStart: true,
     });
@@ -67,6 +71,7 @@ function ProgressBar({ state, setState, progress }) {
     const timeStr = <span className='time-number'>{mm} : {ss}</span>;
 
     useEffect(() => {
+        // Success: the puzzle has been solved
         if (progress >= 100) {
             pause();
             setState(prev => ({
@@ -74,6 +79,10 @@ function ProgressBar({ state, setState, progress }) {
                 status: STATUS.SOLVED,
                 deadline: -1,
             }));
+            // update totalTimeInSec
+            const timeLeft = (60 * minutes) + seconds;
+            const timeUsed = TIME_LIMIT.task - timeLeft;
+            totalTimeInSec.current += timeUsed;
         }
     // eslint-disable-next-line
     }, [progress]); 

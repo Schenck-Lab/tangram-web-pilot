@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Grid } from '@react-three/drei';
 import { useGameContext } from '../contexts/GameContext';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import { BASIC_MAT } from '../graphics/materials';
 import { pi, cyl_mesh, box_mesh } from '../graphics/meshes';
 import Tans from './Tans';
@@ -9,9 +9,10 @@ import VisCoord from './VisCoord';
 import { PieceState } from '../puzzles/PieceState';
 import { Puzzle } from '../puzzles/Puzzle';
 import { PUZZLE_LIST } from '../puzzles/puzzleLib';
-import { STATUS, TASK_LIST, MASK_KEY_MAP, CSV_HEADER, 
+import { STATUS, TASK_LIST, MASK_KEY_MAP, CSV_HEADER, TAN_KEYS,
     COL_NAME_INDICE, EVENT_CTRL } from '../constants/gameConfig';
 import { toStdDeg, getTimeStampString } from '../utils/utils';
+import * as THREE from 'three';
 
 
 function MainCoordinateIndicator() {
@@ -58,13 +59,18 @@ function MainCoordinateIndicator() {
 }
 
 function PlayBoard({state, handleProgress}) {
-    const { hoverMask, playerTans, lastEntry, addGameData } = useGameContext();
+    const { 
+        hoverMask, isDragging, initPan, initRot, initAngle, focusMask,
+        rotationEnabled, playerTans, lastEntry, addGameData 
+    } = useGameContext();
+    const { camera, size } = useThree();
+    const mouseXYRef = useRef({ x: 0, y: 0 });
 
     const puzzleKey = TASK_LIST[state.taskId];
     const coordinateRef = useRef();
     let ps = updateCurrentPieceState();
     const currPz = new Puzzle('running', ps);
-    
+
     function updateCurrentPieceState() {
         const temp = {};
         Object.entries(playerTans.current).forEach(([key, piece]) => {
@@ -82,6 +88,20 @@ function PlayBoard({state, handleProgress}) {
         return new PieceState(temp);
     }
 
+    const screenToScene = (screenX, screenY) => {
+        const ndcX = +((screenX / size.width ) * 2 - 1);
+        const ndcY = -((screenY / size.height) * 2 - 1);
+        const worldPosition = new THREE.Vector3(ndcX, ndcY, 0);
+        worldPosition.unproject(camera);
+        worldPosition.z = 1;
+        return worldPosition;
+    };
+
+    const handleMouseMove = useCallback((event) => {
+        mouseXYRef.current.x = event.clientX;
+        mouseXYRef.current.y = event.clientY;
+    }, []);
+    
     const computeProgress = () => {
         if (!puzzleKey) return [0, 1];
 
@@ -92,15 +112,8 @@ function PlayBoard({state, handleProgress}) {
         const R = C.intersection(T);
         return [R.size, T.size];
     }
-    
-    const handleKeyDown = (event) => {
-        if (EVENT_CTRL.logPieceStateToConsole && event.key === 'l') {
-            ps = updateCurrentPieceState();
-            console.log(ps.toString());
-        }
-    };
 
-    const handleMouseUp = (event) => {
+    const pushRecordToBuffer = () => {
         if (!puzzleKey) {
             handleProgress(0);
             return;
@@ -149,13 +162,94 @@ function PlayBoard({state, handleProgress}) {
             lastEntry.current = currEntry;
         }
     }
+    
+    const handleKeyDown = (event) => {
+        if (EVENT_CTRL.logPieceStateToConsole && event.key === 'l') {
+            ps = updateCurrentPieceState();
+            console.log(ps.toString());
+        }
+
+        if (event.key === 'd') {
+            TAN_KEYS.forEach((key) => {
+                const pz = playerTans.current[key];
+                console.log(`${key}: `, pz.current.position);
+            });
+        }
+
+        if (event.key.toLowerCase() === 'r') {
+            if (isDragging.current && focusMask.current > 0 && !rotationEnabled.current) {
+                
+                const pieceKey = MASK_KEY_MAP[focusMask.current];
+                const tanRef = playerTans.current[pieceKey];
+                
+                const ry = tanRef.current.rotation.y;
+                const sign = (pieceKey === 'PL' && ry === Math.PI) ? -1 : 1;
+                
+                const x = mouseXYRef.current.x;
+                const y = mouseXYRef.current.y;
+                const initCursor = screenToScene(x, y);
+                
+                if (initAngle.current === undefined) {
+                    initRot.current = initCursor.clone().sub(tanRef.current.position);
+                    initAngle.current = tanRef.current.rotation.z * sign;
+                }
+                
+            }
+            rotationEnabled.current = true;
+        }
+    };
+
+
+    const handleKeyUp = (event) => {
+        if (event.key.toLowerCase() === 'r') {
+            rotationEnabled.current = false;
+            isDragging.current = false;
+            initAngle.current = undefined;
+        }
+    };
+
+    const handleMouseDown = (event) => {
+        // Process at the beginning of a 'dragging' operation
+        if (hoverMask.current > 0 && !isDragging.current) {
+            focusMask.current = hoverMask.current;
+            const pieceKey = MASK_KEY_MAP[focusMask.current];
+            const tanRef = playerTans.current[pieceKey];
+
+            const ry = tanRef.current.rotation.y;
+            const sign = (pieceKey === 'PL' && ry === Math.PI) ? -1 : 1;
+
+            const x = event.clientX;
+            const y = event.clientY;
+            const initCursor = screenToScene(x, y);
+            
+            // Handle init for transition
+            if (!rotationEnabled.current) {
+                initPan.current = initCursor.clone().sub(tanRef.current.position);
+            }
+            else {
+                if (initAngle.current === undefined) {
+                    initRot.current = initCursor.clone().sub(tanRef.current.position);
+                    initAngle.current = tanRef.current.rotation.z * sign;
+                }
+            }
+            // set flag true
+            isDragging.current = true;
+        }
+    }
+
+    const handleMouseUp = (event) => {
+        isDragging.current = false;
+        focusMask.current = 0;
+        initAngle.current = undefined;
+        pushRecordToBuffer();
+    }
 
     const handleDoubleClick = () => {
         // after double click, in case (...rarely) the player double-click
         // the PL which leads a final win, we do a computeProgress call
         // from the handleMouseUp function after 0.1 seconds
         setTimeout(() => {
-            handleMouseUp();
+            pushRecordToBuffer();
         }, 100);
     }
 
@@ -166,14 +260,20 @@ function PlayBoard({state, handleProgress}) {
     useEffect(() => {
         // Add event listeners for keydown and keyup
         window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('keyup', handleKeyUp);
+        window.addEventListener('mousedown', handleMouseDown);
         window.addEventListener('mouseup', handleMouseUp);
+        window.addEventListener('mousemove', handleMouseMove);
         window.addEventListener('dblclick', handleDoubleClick);
         window.addEventListener('contextmenu', disableRightClick);
         
         // Clean up by removing event listeners on unmount
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('keyup', handleKeyUp);
+            window.removeEventListener('mousedown', handleMouseDown);
             window.removeEventListener('mouseup', handleMouseUp);
+            window.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('dblclick', handleDoubleClick);
             window.removeEventListener("contextmenu", disableRightClick);
         };
@@ -181,17 +281,76 @@ function PlayBoard({state, handleProgress}) {
     }, [state]);
 
 
-    function updateCursorStyle() {
-        if (hoverMask.current === 0) {
-            document.body.style.cursor = 'default';
+    const updateCursorStyle = () => {
+        if (isDragging.current) {
+            document.body.style.cursor = 'grabbing';
         }
-        else if (document.body.style.cursor === 'default') {
+        else if (hoverMask.current > 0) {
             document.body.style.cursor = 'grab';
+        }
+        else {
+            document.body.style.cursor = 'default';
         }
     }
 
-    useFrame(() => {
+    const roundToRad = (angle) => {
+        const UNIT = 15;
+        const degrees = THREE.MathUtils.radToDeg(angle);
+        const roundedDegrees = Math.round(degrees / UNIT) * UNIT;
+        return THREE.MathUtils.degToRad(roundedDegrees);
+    }
+
+    const roundDist = (vec) => {
+        const UNIT = 0.1;
+        // Helper function to round to the nearest multiple of UNIT
+        const roundTo = (value, unit) => Math.round(value / unit) * unit;
+    
+        // Return a new vector rounded to the nearest multiple of UNIT
+        return new THREE.Vector3(
+            roundTo(vec.x, UNIT),
+            roundTo(vec.y, UNIT),
+            roundTo(vec.z, UNIT)
+        );
+    }
+
+    useFrame((ctx, delta) => {
         updateCursorStyle();
+
+        if (isDragging.current) {
+
+            const pieceKey = MASK_KEY_MAP[focusMask.current];
+            const tanRef = playerTans.current[pieceKey];
+            const ry = tanRef.current.rotation.y;
+            const sign = (pieceKey === 'PL' && ry === Math.PI) ? -1 : 1;
+
+            // Access mouse position from (-1,1) coordinate
+            const mouseX = ctx.pointer.x;
+            const mouseY = ctx.pointer.y;
+            // Convert normalized coordinates to top-left-zero coordinate
+            const x = (mouseX + 1) / 2 * ctx.size.width;
+            const y = (1 - mouseY) / 2 * ctx.size.height;
+
+            // Convert mouse pos to three-canvas-scene coordinate
+            const currCursor = screenToScene(x, y);
+            
+            // handle Rotation
+            if (rotationEnabled.current) {
+                if (!initRot.current) {
+                    return;
+                }
+                const diffVec = currCursor.clone().sub(tanRef.current.position);
+                const B = Math.atan2(diffVec.y, diffVec.x);
+                const A = Math.atan2(initRot.current.y, initRot.current.x);
+                
+                const result = roundToRad(initAngle.current + (B - A)) * sign;
+                tanRef.current.rotation.z = result;
+            }
+            // hanlde translation
+            else {
+                const targetPos = currCursor.clone().sub(initPan.current);
+                tanRef.current.position.set(...roundDist(targetPos));
+            }
+        }
     });
 
     return (

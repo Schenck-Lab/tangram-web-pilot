@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { useGameContext } from '../contexts/GameContext.js';
 import { PUZZLE_LIST } from '../puzzles/puzzleLib.js';
-import { STATUS, TASK_LIST, DURATION_8_MIN } from '../constants/gameConfig.js';
+import { STATUS, TASK_LIST, TIME_LIMIT } from '../constants/gameConfig.js';
 import Start from './transitions/Start.js';
 import GoNext from './transitions/GoNext.js';
 import Finish from './transitions/Finish.js';
@@ -13,7 +13,7 @@ import { toStdDeg, degToRad, getTimeStampString } from '../utils/utils.js';
 
 
 function TaskRunner() {
-    const { playerTans, rotationEnabled, lastEntry, addGameData } = useGameContext();
+    const { playerTans, totalTimeInSec, lastEntry, addGameData } = useGameContext();
     // Game state
     const [state, setState] = useState({
         taskId: -1, 
@@ -21,8 +21,8 @@ function TaskRunner() {
         deadline: -1,
     });
     const [progress, setProgress] = useState(0);
-
-    function resetPlayerTans() {
+    
+    const resetPlayerTans = () => {
         const target = PUZZLE_LIST.InitPine.pieceStates;
         const tans = playerTans.current;
 
@@ -36,7 +36,7 @@ function TaskRunner() {
         });
     }
 
-    function addFirstEntry(tid) {
+    const addFirstEntry = (tid) => {
         // Organize new entry of current data after some mouse up event
         const tans = playerTans.current;
         const transformData = {};
@@ -63,12 +63,12 @@ function TaskRunner() {
     };
     
 
-    function onStart() {
+    const onStart = () => {
         console.log(`Game started at: ${new Date()}`);
         resetPlayerTans();
         setState(_ => {
             const ddl = new Date();
-            ddl.setSeconds(ddl.getSeconds() + DURATION_8_MIN);
+            ddl.setSeconds(ddl.getSeconds() + TIME_LIMIT.task);
             return {
                 taskId: 0,
                 status: STATUS.SOLVING,
@@ -79,7 +79,7 @@ function TaskRunner() {
         addFirstEntry(0);
     };
 
-    function onNext() {
+    const onNext = () => {
         resetPlayerTans();
         if (state.taskId === TASK_LIST.length - 1) {
             setState(prev => ({
@@ -94,7 +94,7 @@ function TaskRunner() {
         const newTaskId = state.taskId + 1;
         setState(prev => {
             const ddl = new Date();
-            ddl.setSeconds(ddl.getSeconds() + DURATION_8_MIN);
+            ddl.setSeconds(ddl.getSeconds() + TIME_LIMIT.task);
             return {
                 taskId: prev.taskId + 1,
                 status: STATUS.SOLVING,
@@ -105,37 +105,12 @@ function TaskRunner() {
         addFirstEntry(newTaskId);
     }
 
-    // Handlers for pressing 'r', for setting the spin flag
-    function handleKeyDown(event) {
-        if (event.key.toLowerCase() === 'r') {
-            rotationEnabled.current = true;
-        }
-    };
-    function handleKeyUp(event) {
-        if (event.key.toLowerCase() === 'r') {
-            rotationEnabled.current = false;
-        }
-    };
-
-    // (Un)Mounting effect: adds/removes event listeners
-    useEffect(() => {
-        window.addEventListener('keydown', handleKeyDown);
-        window.addEventListener('keyup', handleKeyUp);
-        // Clean up
-        return () => {
-            window.removeEventListener('keydown', handleKeyDown);
-            window.removeEventListener('keyup', handleKeyUp);
-        };
-    // eslint-disable-next-line
-    }, []);
-
-
-    function renderTransitionComponent() {
+    const renderTransitionComponent = () => {
         if (state.taskId === -1) {
             return <Start onStart={onStart} />;
         }
-        if (state.taskId === TASK_LIST.length) {
-            return <Finish />
+        if (state.taskId === TASK_LIST.length || totalTimeInSec.current >= TIME_LIMIT.total) {
+            return <Finish state={state} />
         }
         if (state.status === STATUS.SOLVED || state.status === STATUS.TIMEOUT) {
             return <GoNext onNext={onNext} result={state.status} />

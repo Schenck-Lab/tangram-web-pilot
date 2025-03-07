@@ -200,15 +200,17 @@ export const PUZZLE_LIST = Object.freeze({
 // Problem sets for each experiment
 export const PUZZLE_SETS = {
     TINY_TEST: ['Square', 'InclinedChair'],
+    
+    //Final Order: rocket, fox, mountain, square, ninja star, heart, chair, abstract zero
     PILOT_STUDY_2025_SPRING: [
-        'Square',          // Gemo.  | symmetric | 
+        'Rocket',          // object | symmetric |
         'Fox',             // animal | assym.    | fixed rotation
+        'Mountain',        // object | symmetric |
+        'Square',          // Gemo.  | symmetric | 
+        'NinjaStar',       // object | symmetric | spining*
         'Heart',           // object | symmetric | fixed rotation
         'InclinedChair',   // object | symmetric | 
-        'Rocket',          // object | symmetric |
         'AbstractZero',    // symbol | symmetric | fixed rotation
-        'NinjaStar',       // object | symmetric | spining*
-        'Mountain',        // object | symmetric |
     ],
 };
 

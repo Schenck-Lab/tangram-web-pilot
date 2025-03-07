@@ -31,7 +31,10 @@ export const EVENT_CTRL = Object.freeze({
 
 /** Experiment and Data Collection ::::::::::::::::::::::::::::::::::::::::: */
 export const TASK_LIST = PUZZLE_SETS.PILOT_STUDY_2025_SPRING;
-export const DURATION_8_MIN = 480;  // 8 mins is 480 secs
+export const TIME_LIMIT = Object.freeze({
+    task:  (60 * 7),  // 7 mins
+    total: (60 * 32), // 32 mins
+});
 //export const TASK_LIST = PUZZLE_SETS.TINY_TEST;
 
 export const CSV_HEADER = Object.freeze(

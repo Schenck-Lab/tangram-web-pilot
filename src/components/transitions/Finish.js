@@ -3,15 +3,21 @@ import { useGameContext } from '../../contexts/GameContext';
 import { GAS_URL, ACTION, CSV_HEADER } from '../../constants/gameConfig';
 import { Spin, Alert, Button } from 'antd';
 
-const Finish = () => {
+const Finish = ( {state} ) => {
     const { 
         pid, firstName, lastName, emailAddress, fileName, 
-        addMetaData, csvMetaBufRef, csvGameBufRef,
+        totalTimeInSec, addMetaData, csvMetaBufRef, csvGameBufRef,
     } = useGameContext();
 
     const [taskDone, setTaskDone] = useState(false);
     const [status, setStatus] = useState('loading'); // 'loading', 'success', 'error', 'timeout'
     const message = '🎉 Congratulations! You have completed all the puzzle tasks. Thank you! 🎊';
+
+    // Debug output:
+    console.log(`totalTimeInSec: ${totalTimeInSec.current}`);
+    console.log(`state.taskId: ${state.taskId}`);
+    console.log(`state.status: ${state.status}`);
+    console.log(`state.deadline: ${state.deadline}`);
 
     function generateFileName(isDownloaded = false) {
         const F = firstName.current.charAt(0).toUpperCase();

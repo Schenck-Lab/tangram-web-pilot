@@ -7,7 +7,13 @@ export const GameContextProvider = ({ children }) => {
     const playerTans = useRef({});
     const targetTans = useRef({}); 
     const hoverMask = useRef(0);
+    const isDragging = useRef(false);
     const rotationEnabled = useRef(false);
+    const initPan = useRef(undefined);
+    const initRot = useRef(undefined);
+    const totalTimeInSec = useRef(0);
+    const focusMask = useRef(0);
+    const initAngle = useRef(undefined);
 
     // CSV Buffers
     const csvMetaBufRef = useRef([]);  // Buffer for metadata
@@ -33,7 +39,8 @@ export const GameContextProvider = ({ children }) => {
 
     return (
         <GameContext.Provider value={{
-            playerTans, targetTans, hoverMask, rotationEnabled,
+            playerTans, targetTans, hoverMask, initPan, initRot, initAngle,
+            focusMask, isDragging, rotationEnabled, totalTimeInSec,
             lastEntry, csvMetaBufRef, csvGameBufRef, addGameData, addMetaData,
             pid, firstName, lastName, emailAddress, fileName,
         }}>
